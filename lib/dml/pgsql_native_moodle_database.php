@@ -1343,6 +1343,17 @@ class pgsql_native_moodle_database extends moodle_database {
     }
 
     /**
+     * Returns the SQL from aggregation function call
+     *
+     * @param string $column the column to be aggregated
+     * @param string $table table name
+     * @return string the required SQL part
+     */
+    public function sql_group_concat($column, $table){
+        return "STRING_AGG($column::text,',')";
+    }
+
+    /**
      * Does this driver support tool_replace?
      *
      * @since Moodle 2.6.1

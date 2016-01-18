@@ -1687,6 +1687,17 @@ class oci_native_moodle_database extends moodle_database {
     }
 
     /**
+     * Returns the SQL from aggregation function call
+     *
+     * @param string $column the column to be aggregated
+     * @param string $table table name
+     * @return string the required SQL part
+     */
+    public function sql_group_concat($column, $table){
+        return "LISTAGG($column, ',') WITHIN GROUP (ORDER BY $column)";
+    }
+
+    /**
      * Returns the SQL to know if one field is empty.
      *
      * @param string $tablename Name of the table (without prefix). Not used for now but can be

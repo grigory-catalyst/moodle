@@ -1294,6 +1294,21 @@ class mssql_native_moodle_database extends moodle_database {
     }
 
     /**
+     * Returns the SQL from aggregation function call
+     *
+     * @param string $column the column to be aggregated
+     * @param string $table table name
+     * @return string the required SQL part
+     */
+    public function sql_group_concat($column, $table){
+        return " STUFF("
+        ."(SELECT ',' + $column "
+        ." FROM {{$table}} "
+        ." FOR XML PATH ('')) "
+        .", 1, 1, '') ";
+    }
+
+    /**
      * Returns the proper substr() SQL text used to extract substrings from DB
      * NOTE: this was originally returning only function name
      *
