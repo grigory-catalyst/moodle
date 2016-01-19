@@ -4161,6 +4161,57 @@ class core_dml_testcase extends database_driver_testcase {
             "SELECT ".$DB->sql_position("'Oracle'", "'Moodle'").$DB->sql_null_from_clause()), 0);
     }
 
+    public function test_sql_group_concat() {
+        $DB = $this->tdb;
+        $dbman = $DB->get_manager();
+
+        $table = $this->get_test_table();
+        $tablename = $table->getName();
+
+        $this->assertSame('', $DB->sql_empty()); // Since 2.5 the hack is applied automatically to all bound params.
+        $this->assertDebuggingCalled();
+
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('name', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+        $table->add_field('message', XMLDB_TYPE_CHAR, '255', null, null, null, null);
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+        $dbman->create_table($table);
+
+        for ($i = 1; $i < 4; $i++) {
+            for ($j = 1; $j <= $i; $j++) {
+                $DB->insert_record($tablename, (object) array('name' => "test$i", 'message' => "m$j"));
+            }
+        }
+
+        $records = $DB->get_records_sql("
+            SELECT MAX(id), ".$DB->sql_group_concat('message', $tablename, '||', 'message DESC')." AS test
+              FROM {{$tablename}}
+          GROUP BY name"
+        );
+        $test = array(
+            1 => "m1",
+            3 => "m2||m1",
+            6 => "m3||m2||m1"
+        );
+        foreach ($test as $id => $str) {
+            $this->assertEquals($str, $records[$id]->test);
+        }
+
+        $records = $DB->get_records_sql("
+            SELECT MAX(id), ".$DB->sql_group_concat('message', $tablename, '||')." AS test
+              FROM {{$tablename}}
+          GROUP BY name"
+        );
+        $test = array(
+            1 => "m1",
+            3 => "m1||m2",
+            6 => "m1||m2||m3"
+        );
+        foreach ($test as $id => $str) {
+            $this->assertEquals($str, $records[$id]->test);
+        }
+    }
+
     public function test_sql_empty() {
         $DB = $this->tdb;
         $dbman = $DB->get_manager();
@@ -5528,6 +5579,19 @@ class moodle_database_for_testing extends moodle_database {
     public function begin_transaction() {}
     public function commit_transaction() {}
     public function rollback_transaction() {}
+
+    /**
+     * Returns the SQL from aggregation function call
+     *
+     * @param string $column the column to be aggregated
+     * @param string $table table name
+     * @param string $separator value separator
+     * @param string $orderby Order field
+     * @return string the required SQL part
+     */
+    public function sql_group_concat($column, $table, $separator = ',', $orderby = null) {
+        // TODO: Implement sql_group_concat() method.
+    }
 }
 
 

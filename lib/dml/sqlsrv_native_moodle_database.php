@@ -1362,6 +1362,28 @@ class sqlsrv_native_moodle_database extends moodle_database {
     }
 
     /**
+     * Returns the SQL from aggregation function call
+     *
+     * @param string $column the column to be aggregated
+     * @param string $table table name
+     * @param string $separator value separator
+     * @param string $orderby Order field
+     * @return string the required SQL part
+     */
+    public function sql_group_concat($column, $table, $separator=',', $orderby=null) {
+        if (is_null($orderby)) {
+            $orderby = $column;
+        }
+        return "
+        STUFF(
+        (SELECT '$separator' + $column
+           FROM {{$table}}
+       ORDER BY {$orderby}
+            FOR XML PATH (''))
+        , ".strlen($separator).", ".strlen($separator).", '') ";
+    }
+
+    /**
      * Returns the proper substr() SQL text used to extract substrings from DB
      * NOTE: this was originally returning only function name
      *

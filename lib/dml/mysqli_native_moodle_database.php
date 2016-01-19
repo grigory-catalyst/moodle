@@ -1601,6 +1601,25 @@ class mysqli_native_moodle_database extends moodle_database {
     }
 
     /**
+     * Returns the SQL from aggregation function call
+     *
+     * @param string $column the column to be aggregated
+     * @param string $table table name
+     * @param string $separator value separator
+     * @param string $orderby Order field
+     * @return string the required SQL part
+     */
+    public function sql_group_concat($column, $table, $separator=',', $orderby=null) {
+        if (is_null($orderby)) {
+            $orderby = $column;
+        }
+
+        return "
+            GROUP_CONCAT($column ORDER BY {$orderby} SEPARATOR '{$separator}')
+        ";
+    }
+
+    /**
      * Returns the SQL to be used in order to an UNSIGNED INTEGER column to SIGNED.
      *
      * @deprecated since 2.3

@@ -537,6 +537,19 @@ abstract class pdo_moodle_database extends moodle_database {
         print_error('TODO');
     }
 
+    /**
+     * Returns the SQL from aggregation function call
+     *
+     * @param string $column the column to be aggregated
+     * @param string $table table name
+     * @param string $separator value separator
+     * @param string $orderby Order field
+     * @return string the required SQL part
+     */
+    public function sql_group_concat($column, $table, $separator=',', $orderby=null) {
+        print_error('TODO');
+    }
+
     public function sql_concat_join($separator="' '", $elements=array()) {
         print_error('TODO');
     }

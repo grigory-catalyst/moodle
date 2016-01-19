@@ -2136,6 +2136,17 @@ abstract class moodle_database {
     }
 
     /**
+     * Returns the SQL from aggregation function call
+     *
+     * @param string $column the column to be aggregated
+     * @param string $table table name
+     * @param string $separator value separator
+     * @param string $orderby Order field
+     * @return string the required SQL part
+     */
+    abstract public function sql_group_concat($column, $table, $separator=',', $orderby=null);
+
+    /**
      * This used to return empty string replacement character.
      *
      * @deprecated use bound parameter with empty string instead

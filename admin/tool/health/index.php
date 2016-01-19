@@ -443,16 +443,39 @@ class problem_000013 extends problem_base {
     }
     function exists() {
         global $DB;
-        $positionexpr = $DB->sql_position($DB->sql_concat("','", "q.id", "','"),
-                $DB->sql_concat("','", "qma.sequence", "','"));
-        return $DB->record_exists_sql("
-                SELECT * FROM {question} q
-                    JOIN {question_multianswer} qma ON $positionexpr > 0
-                WHERE qma.question <> q.parent") ||
-            $DB->record_exists_sql("
-                SELECT * FROM {question} q
-                    JOIN {question} parent_q ON parent_q.id = q.parent
-                WHERE q.category <> parent_q.category");
+
+        $grouplen = $DB->sql_length($DB->sql_group_concat('id', 'question'));
+        $tableshouldbe = "(
+        SELECT $grouplen AS group_len, parent
+          FROM {question} AS qp
+         WHERE parent > 0
+      GROUP BY parent)";
+        $seqlensql = $DB->sql_length('sequence');
+        $query = "
+          SELECT 1
+            FROM {question_multianswer} qma
+       LEFT JOIN $tableshouldbe AS should_be
+              ON (should_be.parent = qma.question)
+           WHERE $seqlensql <> should_be.group_len
+                 OR should_be.group_len IS NULL";
+
+        $idpositionsql = $DB->sql_position(
+            $DB->sql_concat("','", 'q.id', "','"),
+            $DB->sql_concat("','", 'qma.sequence', "','")
+        );
+
+        return $DB->record_exists_sql($query) ||
+        $DB->record_exists_sql("
+            SELECT *
+              FROM {question} q
+              JOIN {question_multianswer} qma ON (qma.question = q.parent)
+             WHERE $idpositionsql = 0
+            ") ||
+        $DB->record_exists_sql("
+            SELECT *
+              FROM {question} q
+              JOIN {question} parent_q ON parent_q.id = q.parent
+             WHERE q.category <> parent_q.category");
     }
     function severity() {
         return SEVERITY_ANNOYANCE;
